@@ -12,6 +12,7 @@ import struct
 from datetime import datetime
 from collections import defaultdict
 import json
+import logging
 
 # Constants
 """WebSocket URL for DhanHQ Live Market Feed"""
@@ -98,16 +99,16 @@ class DhanFeed:
                 await self.ws.send(header_message)
             await self.ws.close()
             self.ws = None
-        print("Connection closed!")
+        logging.info("Connection closed!")
 
     async def authorize(self):
         """Establishes the WebSocket connection and authorizes the user"""
         if self.version != 'v1':
-            print("Authorization not needed for this version.")
+            logging.info("Authorization not needed for this version.")
             self.is_authorized = True
             return
         try:
-            print("Authorizing...")
+            logging.info("Authorizing...")
 
             # Authorization packet creation
             api_access_token = self.access_token.encode('utf-8')
@@ -127,9 +128,9 @@ class DhanFeed:
             # Send authorization packet
             await self.ws.send(authorization_packet)
             self.is_authorized = True
-            print("Authorization successful!")
+            logging.info("Authorization successful!")
         except Exception as e:
-            print(f"Authorization failed: {e}")
+            logging.error("Authorization failed: %s", e)
             self.is_authorized = False
 
 
@@ -174,7 +175,7 @@ class DhanFeed:
         """Subscribe Instruments on the Open Websocket"""
         if self.version == 'v1':
             if not self.is_authorized:
-                print("Not authorized. Please authorize first.")
+                logging.warning("Not authorized. Please authorize first.")
                 return
 
             # Subscription packet creation
@@ -396,19 +397,19 @@ class DhanFeed:
         disconnection_packet = [struct.unpack('<BHBIH', data[0:10])]
         self.on_close = False
         if disconnection_packet[0][4] == 805:
-            print ("Disconnected: No. of active websocket connections exceeded")
+            logging.error("Disconnected: No. of active websocket connections exceeded")
             self.on_close = True
         elif disconnection_packet[0][4] == 806:
-            print ("Disconnected: Subscribe to Data APIs to continue")
+            logging.error("Disconnected: Subscribe to Data APIs to continue")
             self.on_close = True
         elif disconnection_packet[0][4] == 807:
-            print ("Disconnected: Access Token is expired")
+            logging.error("Disconnected: Access Token is expired")
             self.on_close = True
         elif disconnection_packet[0][4] == 808:
-            print ("Disconnected: Invalid Client ID")
+            logging.error("Disconnected: Invalid Client ID")
             self.on_close = True
         elif disconnection_packet[0][4] == 809:
-            print ("Disconnected: Authentication Failed - check ")
+            logging.error("Disconnected: Authentication Failed - check ")
             self.on_close = True
 
     async def on_connection_opened(self, websocket):
