@@ -70,7 +70,10 @@ def test_open_browser_for_tpin_bulk(tmp_path, monkeypatch):
     api = dhanhq('CID', 'TOKEN')
     url = api.base_url + '/edis/form'
     responses.add(responses.POST, url, json={'edisFormHtml': '<form></form>'}, status=200)
-    monkeypatch.setattr('dhanhq.dhanhq.web_open', lambda x: None)
+    # patch using module object to avoid ambiguity with class having same name
+    import importlib
+    module = importlib.import_module('dhanhq.dhanhq')
+    monkeypatch.setattr(module, 'web_open', lambda x: None)
     monkeypatch.chdir(tmp_path)
     resp = api.open_browser_for_tpin('ISIN', 1, 'NSE', bulk=True)
     assert resp['status'] == 'success'
@@ -108,3 +111,37 @@ async def test_subscribe_unsubscribe(monkeypatch):
     feed.unsubscribe_symbols([(1, '1', 15)])
     await asyncio.sleep(0)
     assert ws.sent
+
+
+@responses.activate
+def test_get_holdings_success():
+    api = dhanhq('CID', 'TOKEN')
+    url = api.base_url + '/holdings'
+    responses.add(responses.GET, url, json={'holdings': []}, status=200)
+    resp = api.get_holdings()
+    assert resp['status'] == 'success'
+    assert resp['data'] == {'holdings': []}
+
+
+@responses.activate
+def test_get_trade_history_success():
+    api = dhanhq('CID', 'TOKEN')
+    url = api.base_url + '/trades/2024-01-01/2024-01-31/0'
+    responses.add(responses.GET, url, json={'trades': []}, status=200)
+    resp = api.get_trade_history('2024-01-01', '2024-01-31', page_number=0)
+    assert resp['status'] == 'success'
+    assert resp['data'] == {'trades': []}
+
+
+@responses.activate
+def test_option_chain_success():
+    api = dhanhq('CID', 'TOKEN')
+    url = api.base_url + '/optionchain'
+    responses.add(responses.POST, url, json={'chain': []}, status=200)
+    resp = api.option_chain(123, api.NSE, '2024-06-01')
+    assert resp['status'] == 'success'
+    assert resp['data'] == {'chain': []}
+    sent = json.loads(responses.calls[0].request.body)
+    assert sent['UnderlyingScrip'] == 123
+    assert sent['UnderlyingSeg'] == api.NSE
+    assert sent['Expiry'] == '2024-06-01'
