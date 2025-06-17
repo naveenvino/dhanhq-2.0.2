@@ -70,13 +70,27 @@ def test_open_browser_for_tpin_bulk(tmp_path, monkeypatch):
     api = dhanhq('CID', 'TOKEN')
     url = api.base_url + '/edis/form'
     responses.add(responses.POST, url, json={'edisFormHtml': '<form></form>'}, status=200)
-    monkeypatch.setattr('dhanhq.dhanhq.web_open', lambda x: None)
+    import sys
+    monkeypatch.setattr(sys.modules['dhanhq.dhanhq'], 'web_open', lambda x: None)
     monkeypatch.chdir(tmp_path)
     resp = api.open_browser_for_tpin('ISIN', 1, 'NSE', bulk=True)
     assert resp['status'] == 'success'
     sent = json.loads(responses.calls[0].request.body)
     assert sent['bulk'] is True
     assert (tmp_path / 'temp_form.html').exists()
+
+
+@responses.activate
+def test_generate_bulk_tpin_form():
+    api = dhanhq('CID', 'TOKEN')
+    url = api.base_url + '/edis/bulkform'
+    responses.add(responses.POST, url, json={'edisFormHtml': '<form>\\data</form>'}, status=200)
+    data = [{'isin': 'ISIN', 'qty': 1, 'exchange': 'NSE'}]
+    resp = api.generate_bulk_tpin_form(data)
+    assert resp['status'] == 'success'
+    assert resp['data']['edisFormHtml'] == '<form>data</form>'
+    sent = json.loads(responses.calls[0].request.body)
+    assert sent['edisRequests'] == data
 
 
 @responses.activate

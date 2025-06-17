@@ -168,6 +168,11 @@ dhan.open_browser_for_tpin(isin='INE00IN01015',
     qty=1,
     exchange='NSE')
 
+# Bulk TPIN form HTML
+dhan.generate_bulk_tpin_form([
+    {"isin": 'INE00IN01015', "qty": 1, "exchange": 'NSE'}
+])
+
 # EDIS Status and Inquiry
 dhan.edis_inquiry()
 
