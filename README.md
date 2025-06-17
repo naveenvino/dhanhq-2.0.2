@@ -192,7 +192,7 @@ dhan.place_forever(
     exchange_segment= dhan.NSE,
     transaction_type= dhan.BUY,
     product_type=dhan.CNC,
-    product_type= dhan.LIMIT,
+    order_type=dhan.LIMIT,
     quantity= 10,
     price= 1900,
     trigger_Price= 1950
