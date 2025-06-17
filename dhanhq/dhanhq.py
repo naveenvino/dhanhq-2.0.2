@@ -847,6 +847,43 @@ class dhanhq:
                 "data": "",
             }
 
+    def generate_bulk_tpin_form(self, requests_list):
+        """Generate HTML form for bulk eDIS authorization.
+
+        Args:
+            requests_list (list): List of dictionaries containing ``isin``,
+                ``qty`` and ``exchange`` for each security. ``segment`` can be
+                provided for every item and defaults to ``EQ`` by the API.
+
+        Returns:
+            dict: Parsed API response with ``edisFormHtml`` content cleaned of
+            escape characters.
+        """
+        try:
+            url = self.base_url + "/edis/bulkform"
+            payload = {"edisRequests": requests_list}
+            data = json_dumps(payload)
+            response = self.session.post(
+                url, headers=self.header, data=data, timeout=self.timeout
+            )
+            result = self._parse_response(response)
+            if (
+                result.get("status") == "success"
+                and isinstance(result.get("data"), dict)
+                and "edisFormHtml" in result["data"]
+            ):
+                result["data"]["edisFormHtml"] = result["data"][
+                    "edisFormHtml"
+                ].replace("\\", "")
+            return result
+        except Exception as e:
+            logging.error("Exception in dhanhq>>generate_bulk_tpin_form : %s", e)
+            return {
+                "status": "failure",
+                "remarks": str(e),
+                "data": "",
+            }
+
     def edis_inquiry(self, isin):
         """
         Inquire about the eDIS status of the provided ISIN.
