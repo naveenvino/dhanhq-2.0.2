@@ -13,6 +13,7 @@ import requests
 from json import loads as json_loads, dumps as json_dumps
 from pathlib import Path
 from webbrowser import open as web_open
+import tempfile
 from datetime import datetime, timedelta, timezone
 
 
@@ -832,12 +833,12 @@ class dhanhq:
                 url, headers=self.header, data=data, timeout=self.timeout
             )
             data = json_loads(response.content)
-            form_html = data["edisFormHtml"]
-            form_html = form_html.replace("\\", "")
-            with open("temp_form.html", "w") as f:
-                f.write(form_html)
-            filename = f"file:///{Path.cwd()}/temp_form.html"
+            form_html = data["edisFormHtml"].replace("\\", "")
+            with tempfile.NamedTemporaryFile("w", suffix=".html", delete=False) as tmp_file:
+                tmp_file.write(form_html)
+                filename = f"file:///{tmp_file.name}"
             web_open(filename)
+            Path(tmp_file.name).unlink(missing_ok=True)
             return self._parse_response(response)
         except Exception as e:
             logging.error("Exception in dhanhq>>open_browser_for_tpin : %s", e)

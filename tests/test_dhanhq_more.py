@@ -70,14 +70,37 @@ def test_open_browser_for_tpin_bulk(tmp_path, monkeypatch):
     api = dhanhq('CID', 'TOKEN')
     url = api.base_url + '/edis/form'
     responses.add(responses.POST, url, json={'edisFormHtml': '<form></form>'}, status=200)
-    import sys
+    import sys, tempfile
+
     monkeypatch.setattr(sys.modules['dhanhq.dhanhq'], 'web_open', lambda x: None)
-    monkeypatch.chdir(tmp_path)
+
+    tmp_file_path = tmp_path / 'temp_form.html'
+
+    class DummyTempFile:
+        def __init__(self, path):
+            self.name = str(path)
+            self._f = open(self.name, 'w')
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            self._f.close()
+
+        def write(self, data):
+            self._f.write(data)
+
+    def dummy_named_tempfile(*args, **kwargs):
+        assert kwargs.get('delete') is False
+        return DummyTempFile(tmp_file_path)
+
+    monkeypatch.setattr(sys.modules['dhanhq.dhanhq'].tempfile, 'NamedTemporaryFile', dummy_named_tempfile)
+
     resp = api.open_browser_for_tpin('ISIN', 1, 'NSE', bulk=True)
     assert resp['status'] == 'success'
     sent = json.loads(responses.calls[0].request.body)
     assert sent['bulk'] is True
-    assert (tmp_path / 'temp_form.html').exists()
+    assert not tmp_file_path.exists()
 
 
 @responses.activate
