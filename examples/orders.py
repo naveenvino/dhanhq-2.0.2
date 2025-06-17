@@ -103,7 +103,7 @@ dhan.modify_order(
 dhan.cancel_order(order_id)
 
 # Get order by correlation id
-dhan.get_order_by_corelationID(correlationID)
+dhan.get_order_by_correlationID(correlationID)
 
 # Get trade book
 dhan.get_trade_book()

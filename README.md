@@ -46,7 +46,7 @@ DhanHQ v2 extends execution capability with live order updates, market quotes an
 
 - `historical_daily_data` takes `security_id` as argument instead of `symbol`
 
-- Nomenclature changes in `get_order_by_corelationID` to `get_order_by_correlationID`.
+- Nomenclature change: use `get_order_by_correlationID`.
 
 You can read about all other updates from DhanHQ V2 here: [DhanHQ Releases](https://dhanhq.co/docs/v2/releases/).
 
@@ -128,7 +128,7 @@ dhan.modify_order(order_id, order_type, leg_name, quantity, price, trigger_price
 dhan.cancel_order(order_id)
 
 # Get order by correlation id
-dhan.get_order_by_corelationID(corelationID)
+dhan.get_order_by_correlationID(correlationID)
 
 # Get Instrument List
 dhan.fetch_security_list("compact")
