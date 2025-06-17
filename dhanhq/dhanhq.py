@@ -929,6 +929,20 @@ class dhanhq:
                 "data": "",
             }
 
+    def get_kill_switch_status(self):
+        """Retrieve current kill switch status for the account."""
+        try:
+            url = f"{self.base_url}/killswitch"
+            response = self.session.get(url, headers=self.header, timeout=self.timeout)
+            return self._parse_response(response)
+        except Exception as e:
+            logging.error("Exception in dhanhq>>get_kill_switch_status : %s", e)
+            return {
+                "status": "failure",
+                "remarks": str(e),
+                "data": "",
+            }
+
     def get_fund_limits(self):
         """
         Get all information of your trading account like balance, margin utilized, collateral, etc.

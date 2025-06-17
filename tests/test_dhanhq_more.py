@@ -102,6 +102,26 @@ def test_kill_switch_failure():
     assert resp['status'] == 'failure'
 
 
+@responses.activate
+def test_kill_switch_success():
+    api = dhanhq('CID', 'TOKEN')
+    url = api.base_url + '/killswitch?killSwitchStatus=DEACTIVATE'
+    responses.add(responses.POST, url, json={'status': 'off'}, status=200)
+    resp = api.kill_switch('deactivate')
+    assert resp['status'] == 'success'
+    assert resp['data'] == {'status': 'off'}
+
+
+@responses.activate
+def test_get_kill_switch_status_success():
+    api = dhanhq('CID', 'TOKEN')
+    url = api.base_url + '/killswitch'
+    responses.add(responses.GET, url, json={'status': 'ACTIVE'}, status=200)
+    resp = api.get_kill_switch_status()
+    assert resp['status'] == 'success'
+    assert resp['data'] == {'status': 'ACTIVE'}
+
+
 def test_convert_to_date_time():
     api = dhanhq('CID', 'TOKEN')
     dt = api.convert_to_date_time(0)
