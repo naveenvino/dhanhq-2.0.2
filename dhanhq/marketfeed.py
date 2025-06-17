@@ -86,7 +86,8 @@ class DhanFeed:
         return self.data
 
     async def disconnect(self):
-        """Closes the WebSocket connection and sends a disconnect message."""
+        """Closes the WebSocket connection by sending a disconnect message,
+        closing the socket and clearing the stored reference."""
         if self.ws:
             if self.version == 'v2':
                 disconnect_message = {
@@ -95,6 +96,8 @@ class DhanFeed:
                 await self.ws.send(json.dumps(disconnect_message))
                 header_message = self.create_header(feed_request_code=12, message_length=83, client_id=self.client_id)
                 await self.ws.send(header_message)
+            await self.ws.close()
+            self.ws = None
         print("Connection closed!")
 
     async def authorize(self):
