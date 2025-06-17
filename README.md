@@ -218,6 +218,27 @@ dhan.place_super_order(
 # product_type, order_type, quantity, price, target and stop_loss
 ```
 
+### Async Usage
+```python
+import asyncio
+from dhanhq.async_client import AsyncDhanHQ
+
+async def main():
+    api = AsyncDhanHQ("client_id", "access_token")
+    await api.place_order(
+        security_id="1333",
+        exchange_segment=api.NSE,
+        transaction_type=api.BUY,
+        quantity=1,
+        order_type=api.MARKET,
+        product_type=api.INTRA,
+        price=0,
+    )
+    await api.close()
+
+asyncio.run(main())
+```
+
 ### Market Feed Usage
 ```python
 from dhanhq import marketfeed
