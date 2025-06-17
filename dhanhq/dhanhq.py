@@ -1286,3 +1286,4 @@ class dhanhq:
         if dt.time() == datetime.min.time():
             return dt.date()
         return dt
+
