@@ -267,3 +267,8 @@ run_order_update()
 ## Changelog
 
 [Check release notes](https://github.com/dhan-oss/DhanHQ-py/releases)
+
+## Contributing
+
+Contributions are welcome! Please ensure tests run successfully with `pytest` and check code style using `flake8` before opening a pull request.
+
