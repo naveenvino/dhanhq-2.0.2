@@ -681,6 +681,100 @@ class dhanhq:
                 "data": "",
             }
 
+    def get_super_orders(self):
+        """Retrieve a list of all existing Super Orders."""
+        try:
+            url = self.base_url + "/super/orders"
+            response = self.session.get(url, headers=self.header, timeout=self.timeout)
+            return self._parse_response(response)
+        except Exception as e:
+            logging.error("Exception in dhanhq>>get_super_orders : %s", e)
+            return {"status": "failure", "remarks": str(e), "data": ""}
+
+    def place_super_order(
+        self,
+        security_id,
+        exchange_segment,
+        transaction_type,
+        product_type,
+        order_type,
+        quantity,
+        price,
+        trigger_price,
+        target,
+        stop_loss,
+        tag=None,
+    ):
+        """Place a new Super Order in the Dhan account."""
+        try:
+            url = self.base_url + "/super/orders"
+            payload = {
+                "dhanClientId": self.client_id,
+                "securityId": security_id,
+                "exchangeSegment": exchange_segment.upper(),
+                "transactionType": transaction_type.upper(),
+                "productType": product_type.upper(),
+                "orderType": order_type.upper(),
+                "quantity": int(quantity),
+                "price": float(price),
+                "triggerPrice": float(trigger_price),
+                "targetPrice": float(target),
+                "stopLossPrice": float(stop_loss),
+            }
+            if tag:
+                payload["correlationId"] = tag
+            payload = json_dumps(payload)
+            response = self.session.post(url, headers=self.header, timeout=self.timeout, data=payload)
+            return self._parse_response(response)
+        except Exception as e:
+            logging.error("Exception in dhanhq>>place_super_order: %s", e)
+            return {"status": "failure", "remarks": str(e), "data": ""}
+
+    def modify_super_order(
+        self,
+        order_id,
+        leg_name,
+        quantity=None,
+        price=None,
+        trigger_price=None,
+        target=None,
+        stop_loss=None,
+    ):
+        """Modify an existing Super Order."""
+        try:
+            url = self.base_url + f"/super/orders/{order_id}"
+            payload = {
+                "dhanClientId": self.client_id,
+                "orderId": str(order_id),
+                "legName": leg_name,
+            }
+            if quantity is not None:
+                payload["quantity"] = int(quantity)
+            if price is not None:
+                payload["price"] = float(price)
+            if trigger_price is not None:
+                payload["triggerPrice"] = float(trigger_price)
+            if target is not None:
+                payload["targetPrice"] = float(target)
+            if stop_loss is not None:
+                payload["stopLossPrice"] = float(stop_loss)
+            payload = json_dumps(payload)
+            response = self.session.put(url, headers=self.header, timeout=self.timeout, data=payload)
+            return self._parse_response(response)
+        except Exception as e:
+            logging.error("Exception in dhanhq>>modify_super_order: %s", e)
+            return {"status": "failure", "remarks": str(e), "data": ""}
+
+    def cancel_super_order(self, order_id):
+        """Cancel a Super Order using the order ID."""
+        try:
+            url = self.base_url + f"/super/orders/{order_id}"
+            response = self.session.delete(url, headers=self.header, timeout=self.timeout)
+            return self._parse_response(response)
+        except Exception as e:
+            logging.error("Exception in dhanhq>>cancel_super_order: %s", e)
+            return {"status": "failure", "remarks": str(e), "data": ""}
+
     def generate_tpin(self):
         """
         Generate T-Pin on registered mobile number.
@@ -739,7 +833,7 @@ class dhanhq:
             form_html = form_html.replace("\\", "")
             with open("temp_form.html", "w") as f:
                 f.write(form_html)
-            filename = f"file:\\\{Path.cwd()}\\temp_form.html"
+            filename = f"file:///{Path.cwd()}/temp_form.html"
             web_open(filename)
             return self._parse_response(response)
         except Exception as e:
