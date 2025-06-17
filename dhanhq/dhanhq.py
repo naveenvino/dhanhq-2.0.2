@@ -168,7 +168,7 @@ class dhanhq:
         Retrieve the order status using a field called ``correlationID``.
 
         Args:
-            correlationID (str): The ``correlationID`` provided during order placement.
+            correlationID (str): The correlationID provided during order placement.
 
         Returns:
             dict: The response containing order status.
