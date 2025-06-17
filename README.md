@@ -216,6 +216,19 @@ dhan.place_super_order(
 )
 # Required parameters: security_id, exchange_segment, transaction_type,
 # product_type, order_type, quantity, price, target and stop_loss
+
+# Get Super Orders
+dhan.get_super_orders()
+
+# Modify Super Order
+dhan.modify_super_order(
+    order_id="12345",
+    leg_name="ENTRY_LEG",
+    price=1910
+)
+
+# Cancel Super Order
+dhan.cancel_super_order("12345", "ENTRY_LEG")
 ```
 
 ### Async Usage
