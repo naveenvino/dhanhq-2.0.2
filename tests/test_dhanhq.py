@@ -94,10 +94,65 @@ def test_modify_super_order_success():
 @responses.activate
 def test_cancel_super_order_success():
     api = dhanhq('CID', 'TOKEN')
-    url = api.base_url + '/super/orders/123'
+    url = api.base_url + '/super/orders/123/ENTRY_LEG'
     responses.add(responses.DELETE, url, json={"status": "cancelled"}, status=200)
 
-    resp = api.cancel_super_order('123')
+    resp = api.cancel_super_order('123', 'ENTRY_LEG')
 
     assert resp['status'] == 'success'
     assert resp['data'] == {"status": "cancelled"}
+
+
+@responses.activate
+def test_get_super_orders_failure():
+    api = dhanhq('CID', 'TOKEN')
+    url = api.base_url + '/super/orders'
+    responses.add(responses.GET, url, json={'err': 'bad'}, status=400)
+
+    resp = api.get_super_orders()
+
+    assert resp['status'] == 'failure'
+
+
+@responses.activate
+def test_place_super_order_failure():
+    api = dhanhq('CID', 'TOKEN')
+    url = api.base_url + '/super/orders'
+    responses.add(responses.POST, url, json={'err': 'bad'}, status=400)
+
+    resp = api.place_super_order(
+        security_id='1',
+        exchange_segment=api.NSE,
+        transaction_type=api.BUY,
+        product_type=api.INTRA,
+        order_type=api.LIMIT,
+        quantity=1,
+        price=10,
+        trigger_price=9,
+        target=12,
+        stop_loss=8
+    )
+
+    assert resp['status'] == 'failure'
+
+
+@responses.activate
+def test_modify_super_order_failure():
+    api = dhanhq('CID', 'TOKEN')
+    url = api.base_url + '/super/orders/123'
+    responses.add(responses.PUT, url, json={'err': 'bad'}, status=400)
+
+    resp = api.modify_super_order('123', leg_name='ENTRY_LEG', price=11)
+
+    assert resp['status'] == 'failure'
+
+
+@responses.activate
+def test_cancel_super_order_failure():
+    api = dhanhq('CID', 'TOKEN')
+    url = api.base_url + '/super/orders/123/ENTRY_LEG'
+    responses.add(responses.DELETE, url, json={'err': 'bad'}, status=400)
+
+    resp = api.cancel_super_order('123', 'ENTRY_LEG')
+
+    assert resp['status'] == 'failure'

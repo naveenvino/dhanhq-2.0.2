@@ -19,6 +19,9 @@ from datetime import datetime, timedelta, timezone
 class dhanhq:
     """DhanHQ Class to interact with REST APIs"""
 
+    # expose the browser open function for testing
+    web_open = staticmethod(web_open)
+
     """Constants for Exchange Segment"""
     NSE = "NSE_EQ"
     BSE = "BSE_EQ"
@@ -765,10 +768,10 @@ class dhanhq:
             logging.error("Exception in dhanhq>>modify_super_order: %s", e)
             return {"status": "failure", "remarks": str(e), "data": ""}
 
-    def cancel_super_order(self, order_id):
-        """Cancel a Super Order using the order ID."""
+    def cancel_super_order(self, order_id, order_leg):
+        """Cancel a specific leg of a Super Order using the order and leg ID."""
         try:
-            url = self.base_url + f"/super/orders/{order_id}"
+            url = self.base_url + f"/super/orders/{order_id}/{order_leg}"
             response = self.session.delete(url, headers=self.header, timeout=self.timeout)
             return self._parse_response(response)
         except Exception as e:
