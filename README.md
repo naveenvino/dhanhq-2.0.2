@@ -65,8 +65,11 @@ REST APIs based market quotes which given you snapshot of ticker mode, quote mod
 * **Option Chain**  
 Single function which gives entire Option Chain across exchanges and segments, giving OI, greeks, volume, top bid/ask and price data.
 
-* **Forever Order**  
+* **Forever Order**
 Place, modify or delete Forever Orders, whether single or OCO to better manage your swing trades.
+
+* **Super Order**
+Advanced bracket orders with target and stop loss legs that can be managed via API.
 
 * **Portfolio Management**  
 With this set of APIs, retrieve your holdings and positions in your portfolio as well as manage them.
@@ -197,6 +200,22 @@ dhan.place_forever(
     price= 1900,
     trigger_Price= 1950
 )
+
+# Place Super Order
+dhan.place_super_order(
+    security_id="1333",
+    exchange_segment=dhan.NSE,
+    transaction_type=dhan.BUY,
+    product_type=dhan.INTRA,
+    order_type=dhan.LIMIT,
+    quantity=10,
+    price=1900,
+    trigger_price=1895,
+    target=1950,
+    stop_loss=1880
+)
+# Required parameters: security_id, exchange_segment, transaction_type,
+# product_type, order_type, quantity, price, target and stop_loss
 ```
 
 ### Market Feed Usage
