@@ -239,10 +239,10 @@ dhan.cancel_super_order("12345", "ENTRY_LEG")
 ### Async Usage
 ```python
 import asyncio
-from dhanhq.async_client import AsyncDhanHQ
+from dhanhq.async_httpx import AsyncDhanhq
 
 async def main():
-    api = AsyncDhanHQ("client_id", "access_token")
+    api = AsyncDhanhq("client_id", "access_token")
     await api.place_order(
         security_id="1333",
         exchange_segment=api.NSE,
