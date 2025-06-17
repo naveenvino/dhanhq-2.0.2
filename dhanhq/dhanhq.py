@@ -165,10 +165,10 @@ class dhanhq:
 
     def get_order_by_correlationID(self, correlationID):
         """
-        Retrieve the order status using a field called correlation ID.
+        Retrieve the order status using a field called ``correlationID``.
 
         Args:
-            corelationID (str): The correlation ID provided during order placement.
+            correlationID (str): The ``correlationID`` provided during order placement.
 
         Returns:
             dict: The response containing order status.
