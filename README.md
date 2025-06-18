@@ -322,6 +322,16 @@ def run_order_update():
 run_order_update()
 ```
 
+### Web UI Example
+Install Flask and run the built-in server to try a simple web interface:
+
+```bash
+FLASK_APP=webui.app flask run
+```
+
+The application provides forms to save your client ID and access token, place orders and view positions.
+
+
 ## Changelog
 
 [Check release notes](https://github.com/dhan-oss/DhanHQ-py/releases)
