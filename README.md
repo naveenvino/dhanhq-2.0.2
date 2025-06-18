@@ -91,6 +91,22 @@ You can install the package via pip
 pip install dhanhq
 ```
 
+### Command Line Interface
+
+After installing, a simple CLI is available which exposes a few common API
+operations. Run the module with your credentials and a command, for example:
+
+```bash
+python -m dhanhq CLIENT_ID ACCESS_TOKEN list-orders
+```
+
+Available commands are:
+
+- `list-orders` – show today's orders
+- `get-order ORDER_ID` – fetch details of a specific order
+- `place-order` – create a basic order (see `-h` for required arguments)
+- `positions` – list current positions
+
 
 
 ### Hands-on API
