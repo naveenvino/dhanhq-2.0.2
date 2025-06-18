@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% block title %}Trade{% endblock %}
 {% block content %}
+<div class="container">
 <h2 class="mb-3">Place Order</h2>
 <form action="/place_order" method="post" class="row g-3">
   <div class="col-md-6">
@@ -49,4 +50,5 @@
     <a class="btn btn-secondary" href="/orders">View Orders</a>
   </div>
 </form>
+</div>
 {% endblock %}

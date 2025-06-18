@@ -2,7 +2,7 @@ import os
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from dhanhq.dhanhq import dhanhq
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="static", static_url_path="/static")
 app.secret_key = "dhanhq-front"
 
 
