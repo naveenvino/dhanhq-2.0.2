@@ -1,19 +1,19 @@
-<!doctype html>
-<html>
-<head>
-    <title>Order List</title>
-</head>
-<body>
-    <h1>Orders</h1>
-    <table border="1">
-        <tr><th>Order ID</th><th>Status</th></tr>
-        {% for order in orders %}
-        <tr>
-            <td>{{ order.get('orderId') }}</td>
-            <td>{{ order.get('status') }}</td>
-        </tr>
-        {% endfor %}
-    </table>
-    <a href="/trade">Back</a>
-</body>
-</html>
+{% extends 'base.html' %}
+{% block title %}Orders{% endblock %}
+{% block content %}
+<h2 class="mb-3">Orders</h2>
+<table class="table table-bordered table-striped">
+  <thead>
+    <tr><th>Order ID</th><th>Status</th></tr>
+  </thead>
+  <tbody>
+  {% for order in orders %}
+    <tr>
+      <td>{{ order.get('orderId') }}</td>
+      <td>{{ order.get('status') }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+<a class="btn btn-secondary" href="/trade">Back</a>
+{% endblock %}
