@@ -9,6 +9,7 @@ class DummyWebSocket:
         self.messages = list(messages or [])
         self.sent = []
         self.state = 1  # open
+        self.closed = False
     async def send(self, msg):
         self.sent.append(msg)
     async def recv(self):
@@ -27,7 +28,10 @@ class DummyWebSocket:
     async def __aenter__(self):
         return self
     async def __aexit__(self, exc_type, exc, tb):
-        pass
+        self.closed = True
+
+    async def close(self):
+        self.closed = True
 
 @pytest.mark.asyncio
 async def test_dhanfeed_connect(monkeypatch):
@@ -62,3 +66,23 @@ async def test_order_socket(monkeypatch):
     await socket.connect_order_update()
     assert received and received[0]['Data']['orderNo'] == '1'
     assert ws.sent
+
+
+@pytest.mark.asyncio
+async def test_dhanfeed_async_context(monkeypatch):
+    ws = DummyWebSocket()
+
+    async def mock_connect(url):
+        return ws
+
+    monkeypatch.setattr('websockets.connect', mock_connect)
+
+    async def fake_subscribe(self):
+        pass
+
+    monkeypatch.setattr(DhanFeed, 'subscribe_instruments', fake_subscribe)
+
+    async with DhanFeed('CID', 'TOKEN', [], version='v2') as feed:
+        assert feed.ws is ws
+    assert ws.closed
+
