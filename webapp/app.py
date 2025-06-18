@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 from dhanhq.dhanhq import dhanhq
 
 app = Flask(__name__)
@@ -16,11 +16,33 @@ def get_api():
 
 @app.route("/")
 def index():
+    if session.get("logged_in"):
+        return redirect(url_for("trade"))
     return render_template("index.html")
+
+
+@app.post("/login")
+def login():
+    username = request.form.get("username")
+    password = request.form.get("password")
+    if username == "admin" and password == "admin@123":
+        session["logged_in"] = True
+        return redirect(url_for("trade"))
+    flash("Invalid credentials")
+    return redirect(url_for("index"))
+
+
+@app.route("/trade")
+def trade():
+    if not session.get("logged_in"):
+        return redirect(url_for("index"))
+    return render_template("trading.html")
 
 
 @app.route("/place_order", methods=["POST"])
 def place_order():
+    if not session.get("logged_in"):
+        return redirect(url_for("index"))
     api = get_api()
     data = request.form
     resp = api.place_order(
@@ -33,11 +55,13 @@ def place_order():
         price=float(data.get("price", 0)),
     )
     flash(resp.get("status"))
-    return redirect(url_for("index"))
+    return redirect(url_for("trade"))
 
 
 @app.route("/orders")
 def orders():
+    if not session.get("logged_in"):
+        return redirect(url_for("index"))
     api = get_api()
     resp = api.get_order_list()
     return render_template("order_list.html", orders=resp.get("data", []))
