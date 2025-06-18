@@ -5,15 +5,27 @@
   <div class="row">
     <!-- Strategy Creation Form -->
     <div class="col-lg-5">
-      <div class="card shadow-sm">
+      <div class="card shadow-sm mb-4">
         <div class="card-body">
-          <h3 class="card-title mb-4">Create Nifty Options Strategy</h3>
+          <h3 class="card-title mb-4">Create Strategy</h3>
           <form action="{{ url_for('manage_strategies') }}" method="post">
-            <div class="mb-3">
-              <label for="name" class="form-label">Strategy Name</label>
-              <input type="text" class="form-control" id="name" name="name" required placeholder="e.g., 9:20 Strangle">
-            </div>
+
+            <!-- General Settings -->
+            <h5 class="mb-3">General Settings</h5>
             <div class="row mb-3">
+              <div class="col-7">
+                <label for="name" class="form-label">Strategy Name</label>
+                <input type="text" class="form-control" id="name" name="name" required placeholder="e.g., 9:20 Strangle">
+              </div>
+              <div class="col-5">
+                  <label for="product_type" class="form-label">Strategy Type</label>
+                  <select class="form-select" id="product_type" name="product_type">
+                    <option value="INTRADAY">Intraday</option>
+                    <option value="MARGIN">Positional (NRML)</option>
+                  </select>
+              </div>
+            </div>
+             <div class="row mb-4">
               <div class="col">
                 <label for="entry_time" class="form-label">Entry Time</label>
                 <input type="time" class="form-control" id="entry_time" name="entry_time" required>
@@ -23,37 +35,68 @@
                 <input type="time" class="form-control" id="exit_time" name="exit_time" required>
               </div>
             </div>
-            <div class="row mb-3">
-              <div class="col">
-                <label for="call_strike_offset" class="form-label">Call Strike (OTM)</label>
-                <select class="form-select" id="call_strike_offset" name="call_strike_offset">
-                  <option value="0">ATM</option>
-                  <option value="1">1 OTM (50 pts)</option>
-                  <option value="2">2 OTM (100 pts)</option>
-                  <option value="3">3 OTM (150 pts)</option>
-                </select>
-              </div>
-              <div class="col">
-                <label for="put_strike_offset" class="form-label">Put Strike (OTM)</label>
-                <select class="form-select" id="put_strike_offset" name="put_strike_offset">
-                  <option value="0">ATM</option>
-                  <option value="1">1 OTM (50 pts)</option>
-                  <option value="2">2 OTM (100 pts)</option>
-                  <option value="3">3 OTM (150 pts)</option>
-                </select>
-              </div>
-            </div>
+            <hr>
+            
+            <!-- Leg Builder -->
+            <h5 class="mb-3">Leg Builder</h5>
+            <!-- Leg 1: Call Option -->
+            <h6>Leg 1: Call Option</h6>
             <div class="row mb-3">
                 <div class="col">
-                    <label for="stop_loss_percent" class="form-label">Stop Loss (%)</label>
-                    <input type="number" class="form-control" id="stop_loss_percent" name="stop_loss_percent" step="0.1" required placeholder="e.g., 25.5">
+                    <label class="form-label">Position</label>
+                    <select class="form-select" name="call_transaction_type">
+                        <option value="SELL">Sell</option>
+                        <option value="BUY">Buy</option>
+                    </select>
                 </div>
                 <div class="col">
-                    <label for="target_profit_percent" class="form-label">Target Profit (%)</label>
-                    <input type="number" class="form-control" id="target_profit_percent" name="target_profit_percent" step="0.1" required placeholder="e.g., 50.0">
+                    <label class="form-label">Strike</label>
+                    <select class="form-select" name="call_strike_offset">
+                      <option value="0">ATM</option>
+                      <option value="1">1 OTM</option>
+                      <option value="2">2 OTM</option>
+                    </select>
                 </div>
             </div>
-            <div class="d-grid">
+             <!-- Leg 2: Put Option -->
+            <h6 class="mt-3">Leg 2: Put Option</h6>
+            <div class="row mb-4">
+                <div class="col">
+                    <label class="form-label">Position</label>
+                    <select class="form-select" name="put_transaction_type">
+                        <option value="SELL">Sell</option>
+                        <option value="BUY">Buy</option>
+                    </select>
+                </div>
+                <div class="col">
+                    <label class="form-label">Strike</label>
+                    <select class="form-select" name="put_strike_offset">
+                      <option value="0">ATM</option>
+                      <option value="1">1 OTM</option>
+                      <option value="2">2 OTM</option>
+                    </select>
+                </div>
+            </div>
+            <hr>
+
+            <!-- Overall Settings -->
+            <h5 class="mb-3">Overall Settings</h5>
+             <div class="row mb-3">
+                <div class="col">
+                    <label for="lots" class="form-label">Lots</label>
+                    <input type="number" class="form-control" id="lots" name="lots" required value="1" min="1">
+                </div>
+                <div class="col">
+                    <label for="stop_loss_amount" class="form-label">Stoploss (₹)</label>
+                    <input type="number" class="form-control" id="stop_loss_amount" name="stop_loss_amount" step="1" required placeholder="e.g., 1000">
+                </div>
+                <div class="col">
+                    <label for="target_profit_amount" class="form-label">Target (₹)</label>
+                    <input type="number" class="form-control" id="target_profit_amount" name="target_profit_amount" step="1" required placeholder="e.g., 2000">
+                </div>
+            </div>
+
+            <div class="d-grid mt-4">
               <button type="submit" class="btn btn-primary">Create & Activate Strategy</button>
             </div>
           </form>
@@ -69,8 +112,8 @@
           <thead class="table-light">
             <tr>
               <th>Name</th>
-              <th>Timings</th>
-              <th>Strikes (C/P OTM)</th>
+              <th>Legs</th>
+              <th>Risk (SL/TGT)</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
@@ -78,16 +121,22 @@
           <tbody>
             {% for strategy in strategies %}
             <tr>
-              <td><strong>{{ strategy.name }}</strong></td>
-              <td>{{ strategy.entry_time.strftime('%H:%M') }} - {{ strategy.exit_time.strftime('%H:%M') }}</td>
-              <td>{{ strategy.call_strike_offset }} / {{ strategy.put_strike_offset }}</td>
+              <td><strong>{{ strategy.name }}</strong><br><small class="text-muted">{{ strategy.product_type }} | {{ strategy.entry_time.strftime('%H:%M') }} - {{ strategy.exit_time.strftime('%H:%M') }}</small></td>
+              <td>
+                Lots: {{ strategy.lots }} <br>
+                CE: {{ strategy.call_transaction_type }} @ {{ strategy.call_strike_offset }} OTM <br>
+                PE: {{ strategy.put_transaction_type }} @ {{ strategy.put_strike_offset }} OTM
+              </td>
+              <td>₹{{ "%.2f"|format(strategy.stop_loss_amount) }} / ₹{{ "%.2f"|format(strategy.target_profit_amount) }}</td>
               <td>
                 {% if strategy.status == 'active' %}
                   <span class="badge bg-primary">Active</span>
                 {% elif strategy.status == 'running' %}
                   <span class="badge bg-success">Running</span>
-                {% else %}
+                {% elif 'stopped' in strategy.status %}
                   <span class="badge bg-secondary">{{ strategy.status|capitalize }}</span>
+                {% else %}
+                   <span class="badge bg-warning text-dark">{{ strategy.status|capitalize }}</span>
                 {% endif %}
               </td>
               <td>
