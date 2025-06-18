@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block title %}Strategies{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="row">
+    <div class="col-md-5">
+      <h2 class="mb-3">Create Nifty Option Selling Strategy</h2>
+      <form action="/strategies" method="post" class="row g-3">
+        <div class="col-12">
+          <label class="form-label" for="name">Strategy Name</label>
+          <input class="form-control" id="name" name="name" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="entry_time">Entry Time</label>
+          <input class="form-control" id="entry_time" name="entry_time" type="time" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="exit_time">Exit Time</label>
+          <input class="form-control" id="exit_time" name="exit_time" type="time" required>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label" for="call_strike">Call Strike</label>
+            <select class="form-select" id="call_strike" name="call_strike">
+              <option value="ATM">ATM</option>
+              <option value="1_OTM">1 OTM</option>
+              <option value="2_OTM">2 OTM</option>
+            </select>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label" for="put_strike">Put Strike</label>
+            <select class="form-select" id="put_strike" name="put_strike">
+              <option value="ATM">ATM</option>
+              <option value="1_OTM">1 OTM</option>
+              <option value="2_OTM">2 OTM</option>
+            </select>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label" for="stop_loss">Stop Loss (%)</label>
+            <input class="form-control" id="stop_loss" name="stop_loss" type="number" step="0.1" required>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label" for="target_profit">Target Profit (%)</label>
+            <input class="form-control" id="target_profit" name="target_profit" type="number" step="0.1" required>
+        </div>
+        <div class="col-12">
+          <button type="submit" class="btn btn-primary">Create & Activate Strategy</button>
+        </div>
+      </form>
+    </div>
+    <div class="col-md-7">
+        <h2 class="mb-3">Active Strategies</h2>
+        <div class="table-responsive">
+          <table class="table table-bordered table-striped">
+            <thead>
+              <tr><th>Name</th><th>Entry</th><th>Exit</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+            {% for strategy in strategies %}
+              <tr>
+                <td>{{ strategy.name }}</td>
+                <td>{{ strategy.entry_time }}</td>
+                <td>{{ strategy.exit_time }}</td>
+                <td><span class="badge bg-success">{{ strategy.status }}</span></td>
+              </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
