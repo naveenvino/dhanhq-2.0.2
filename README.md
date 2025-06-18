@@ -322,6 +322,21 @@ def run_order_update():
 run_order_update()
 ```
 
+## Frontend
+
+A minimal Flask application is provided for manually testing the APIs.
+
+Install the dependency and run the app:
+
+```bash
+pip install flask
+python frontend/app.py
+```
+
+`CLIENT_ID` and `ACCESS_TOKEN` environment variables must be set before running
+the application. It exposes a form at `http://localhost:5000/` to place orders
+and an `/orders` page to view the day's orders.
+
 ## Changelog
 
 [Check release notes](https://github.com/dhan-oss/DhanHQ-py/releases)
