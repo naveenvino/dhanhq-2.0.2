@@ -341,7 +341,9 @@ run_order_update()
 ## Simple Frontend
 
 A minimal Flask application is provided in `webapp/` which demonstrates how to
-place orders and view your day's orders using this library.
+place orders and view your day's orders using this library. The interface now
+leverages [Bootstrap](https://getbootstrap.com/) for styling and serves static
+assets from `webapp/static/`.
 
 Run it with your Dhan credentials:
 
@@ -351,7 +353,8 @@ export DHAN_ACCESS_TOKEN=your_token
 python -m webapp.app
 ```
 
-Open `http://localhost:5000` in your browser to access the interface.
+After starting the app, open `http://localhost:5000` in a modern browser to
+access the Bootstrap-powered interface.
 
 ## Changelog
 
@@ -359,5 +362,5 @@ Open `http://localhost:5000` in your browser to access the interface.
 
 ## Contributing
 
-Contributions are welcome! Please ensure tests run successfully with `pytest` and check code style using `flake8` before opening a pull request.
+Contributions are welcome! Before submitting a pull request, run `flake8` and `pytest` to verify coding style and that all tests pass.
 
