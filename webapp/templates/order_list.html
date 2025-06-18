@@ -1,0 +1,19 @@
+<!doctype html>
+<html>
+<head>
+    <title>Order List</title>
+</head>
+<body>
+    <h1>Orders</h1>
+    <table border="1">
+        <tr><th>Order ID</th><th>Status</th></tr>
+        {% for order in orders %}
+        <tr>
+            <td>{{ order.get('orderId') }}</td>
+            <td>{{ order.get('status') }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    <a href="/">Back</a>
+</body>
+</html>

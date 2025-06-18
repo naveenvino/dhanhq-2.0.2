@@ -322,6 +322,21 @@ def run_order_update():
 run_order_update()
 ```
 
+## Simple Frontend
+
+A minimal Flask application is provided in `webapp/` which demonstrates how to
+place orders and view your day's orders using this library.
+
+Run it with your Dhan credentials:
+
+```bash
+export DHAN_CLIENT_ID=your_id
+export DHAN_ACCESS_TOKEN=your_token
+python -m webapp.app
+```
+
+Open `http://localhost:5000` in your browser to access the interface.
+
 ## Changelog
 
 [Check release notes](https://github.com/dhan-oss/DhanHQ-py/releases)
