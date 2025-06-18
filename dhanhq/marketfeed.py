@@ -49,6 +49,15 @@ class DhanFeed:
         self.loop = asyncio.get_event_loop()
         self.version = version
 
+    async def __aenter__(self):
+        """Allow usage of ``async with`` for automatic connection management."""
+        await self.connect()
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb):
+        """Ensure the websocket connection is closed when exiting."""
+        await self.disconnect()
+
     def run_forever(self):
         """Starts the WebSocket connection and runs the event loop."""
         self.loop.run_until_complete(self.connect())
