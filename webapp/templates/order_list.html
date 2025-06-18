@@ -1,7 +1,9 @@
 {% extends 'base.html' %}
 {% block title %}Orders{% endblock %}
 {% block content %}
+<div class="container">
 <h2 class="mb-3">Orders</h2>
+<div class="table-responsive">
 <table class="table table-bordered table-striped">
   <thead>
     <tr><th>Order ID</th><th>Status</th></tr>
@@ -15,5 +17,7 @@
   {% endfor %}
   </tbody>
 </table>
+</div>
 <a class="btn btn-secondary" href="/trade">Back</a>
+</div>
 {% endblock %}
