@@ -246,24 +246,7 @@ def delete_strategy(strategy_id):
     return redirect(url_for("manage_strategies"))
 
 
-@app.route("/trade")
-def trade_page():
-    if not session.get("logged_in"):
-        return redirect(url_for("index"))
-    return render_template("trading.html")
-
-
-@app.route("/orders")
-def orders_page():
-    if not session.get("logged_in"):
-        return redirect(url_for("index"))
-    api = get_api()
-    orders = []
-    if api:
-        resp = api.get_order_list()
-        if resp.get("status") == "success":
-            orders = resp.get("data", [])
-    return render_template("order_list.html", orders=orders)
+# Duplicate route handlers removed below to avoid endpoint clashes during tests
     
 if __name__ == "__main__":
     with app.app_context():

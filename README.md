@@ -391,5 +391,13 @@ instead of hitting the live API. The Flask webapp automatically respects the
 
 ## Contributing
 
-Contributions are welcome! Before submitting a pull request, run `flake8` and `pytest` to verify coding style and that all tests pass.
+Contributions are welcome! Before submitting a pull request, install the
+development requirements and run the test suite:
+
+```bash
+pip install -r requirements-dev.txt
+pytest
+```
+
+This ensures coding style and functionality remain intact.
 

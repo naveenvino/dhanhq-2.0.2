@@ -3,3 +3,11 @@ pytest-asyncio
 responses
 aiohttp
 httpx
+
+flask
+flask_sqlalchemy
+flask_migrate
+apscheduler
+pandas
+websockets
+pyOpenSSL
