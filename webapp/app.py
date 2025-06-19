@@ -21,13 +21,37 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
-# --- Global Variables ---
-try:
-    instrument_df = pd.read_csv('https://images.dhan.co/api-data/api-scrip-master.csv', low_memory=False)
-    logging.info("Successfully loaded security master file.")
-except Exception as e:
-    logging.error(f"FATAL: Could not load instrument file: {e}")
-    instrument_df = pd.DataFrame()
+# --- Instrument Data ---
+INSTRUMENT_CSV_URL = "https://images.dhan.co/api-data/api-scrip-master.csv"
+
+
+def load_instrument_df(force_refresh: bool = False) -> pd.DataFrame:
+    """Load the security master CSV, using a cached copy when available."""
+    csv_path = os.getenv(
+        "INSTRUMENT_CSV",
+        os.path.join(os.path.dirname(__file__), "static", "api-scrip-master.csv"),
+    )
+
+    if not force_refresh and os.path.exists(csv_path):
+        try:
+            df = pd.read_csv(csv_path, low_memory=False)
+            logging.info("Loaded security master from cache")
+            return df
+        except Exception as exc:
+            logging.error(f"Failed to read cached instrument file: {exc}")
+
+    try:
+        df = pd.read_csv(INSTRUMENT_CSV_URL, low_memory=False)
+        os.makedirs(os.path.dirname(csv_path), exist_ok=True)
+        df.to_csv(csv_path, index=False)
+        logging.info("Downloaded security master file")
+        return df
+    except Exception as exc:
+        logging.error(f"FATAL: Could not load instrument file: {exc}")
+        return pd.DataFrame()
+
+
+instrument_df = load_instrument_df()
 
 # --- Database Model ---
 class Strategy(db.Model):
@@ -246,24 +270,6 @@ def delete_strategy(strategy_id):
     return redirect(url_for("manage_strategies"))
 
 
-@app.route("/trade")
-def trade_page():
-    if not session.get("logged_in"):
-        return redirect(url_for("index"))
-    return render_template("trading.html")
-
-
-@app.route("/orders")
-def orders_page():
-    if not session.get("logged_in"):
-        return redirect(url_for("index"))
-    api = get_api()
-    orders = []
-    if api:
-        resp = api.get_order_list()
-        if resp.get("status") == "success":
-            orders = resp.get("data", [])
-    return render_template("order_list.html", orders=orders)
     
 if __name__ == "__main__":
     with app.app_context():

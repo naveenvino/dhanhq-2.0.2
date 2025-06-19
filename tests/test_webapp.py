@@ -1,4 +1,7 @@
+import os
+import pandas as pd
 import webapp.app as webapp_app
+
 app = webapp_app.app
 
 
@@ -45,3 +48,25 @@ def test_orders_page(monkeypatch):
     html = resp.get_data(as_text=True)
     assert 'table table-bordered table-striped' in html
     assert 'class="container"' in html
+
+
+def test_load_instrument_df_uses_cache(tmp_path, monkeypatch):
+    csv = tmp_path / "master.csv"
+    df = pd.DataFrame({"col": [1]})
+    df.to_csv(csv, index=False)
+    monkeypatch.setenv("INSTRUMENT_CSV", str(csv))
+
+    calls = []
+    real_read_csv = pd.read_csv
+
+    def fake_read_csv(path, *args, **kwargs):
+        calls.append(path)
+        return real_read_csv(path, *args, **kwargs)
+
+    monkeypatch.setattr(pd, "read_csv", fake_read_csv)
+
+    result = webapp_app.load_instrument_df()
+
+    assert str(csv) in calls
+    assert webapp_app.INSTRUMENT_CSV_URL not in calls
+    assert list(result.columns) == ["col"]
