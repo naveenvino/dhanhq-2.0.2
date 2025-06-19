@@ -4,6 +4,7 @@ from datetime import datetime, time, date, timedelta
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from werkzeug.security import generate_password_hash, check_password_hash
 from apscheduler.schedulers.background import BackgroundScheduler
 from dhanhq.dhanhq import dhanhq
 import logging
@@ -13,7 +14,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 # --- App and Database Configuration ---
 app = Flask(__name__, static_folder="static", static_url_path="/static")
-app.config['SECRET_KEY'] = 'a_very_secret_key'
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', os.urandom(24).hex())
 db_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'strategies.db')
 app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -54,6 +55,31 @@ class Strategy(db.Model):
 
     def __repr__(self):
         return f'<Strategy {self.name}>'
+
+
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    password_hash = db.Column(db.String(128), nullable=False)
+
+    def __repr__(self):
+        return f'<User {self.username}>'
+
+
+def _create_admin_user():
+    username = os.getenv('ADMIN_USERNAME', 'admin')
+    password = os.getenv('ADMIN_PASSWORD', 'admin@123')
+    if not username or not password:
+        return
+    if not User.query.filter_by(username=username).first():
+        user = User(username=username, password_hash=generate_password_hash(password))
+        db.session.add(user)
+        db.session.commit()
+
+
+with app.app_context():
+    db.create_all()
+    _create_admin_user()
 
 # --- DhanHQ API Helper ---
 def get_api():
@@ -170,17 +196,56 @@ def index():
 
 @app.post("/login")
 def login():
-    if request.form.get("username") == "admin" and request.form.get("password") == "admin@123":
-        session["logged_in"] = True
-        return redirect(url_for("manage_strategies"))
-    flash("Invalid credentials")
-    return redirect(url_for("index"))
+    user = User.query.filter_by(username=request.form.get('username')).first()
+    if user and check_password_hash(user.password_hash, request.form.get('password', '')):
+        session['logged_in'] = True
+        return redirect(url_for('manage_strategies'))
+    flash('Invalid credentials')
+    return redirect(url_for('index'))
 
 @app.route('/logout')
 def logout():
     session.pop('logged_in', None)
     flash('You have been logged out.', 'success')
     return redirect(url_for('index'))
+
+
+@app.route('/trade')
+def trade_page():
+    if not session.get('logged_in'):
+        return redirect(url_for('index'))
+    return render_template('trading.html')
+
+
+@app.post('/place_order')
+def place_order():
+    if not session.get('logged_in'):
+        return redirect(url_for('index'))
+    api = get_api()
+    if api:
+        api.place_order(
+            security_id=request.form['security_id'],
+            exchange_segment=getattr(api, request.form['exchange_segment']),
+            transaction_type=request.form['transaction_type'],
+            quantity=int(request.form['quantity']),
+            order_type=getattr(api, request.form['order_type']),
+            product_type=getattr(api, request.form['product_type']),
+            price=float(request.form.get('price', 0))
+        )
+    return redirect(url_for('trade_page'))
+
+
+@app.route('/orders')
+def orders_page():
+    if not session.get('logged_in'):
+        return redirect(url_for('index'))
+    api = get_api()
+    orders = []
+    if api:
+        resp = api.get_order_list()
+        if resp and resp.get('data'):
+            orders = resp['data']
+    return render_template('order_list.html', orders=orders)
 
 @app.route("/strategies", methods=["GET", "POST"])
 def manage_strategies():

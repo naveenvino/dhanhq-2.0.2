@@ -1,11 +1,14 @@
+import os
+os.environ.setdefault('SECRET_KEY', 'testsecret')
+os.environ.setdefault('ADMIN_USERNAME', 'admin')
+os.environ.setdefault('ADMIN_PASSWORD', 'admin@123')
 import webapp.app as webapp_app
 app = webapp_app.app
 
 
 def _login(client):
-    """Helper to mark the session as logged in."""
-    with client.session_transaction() as sess:
-        sess["logged_in"] = True
+    """Helper to log in via the login route."""
+    client.post('/login', data={'username': 'admin', 'password': 'admin@123'})
 
 
 
