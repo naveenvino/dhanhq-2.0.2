@@ -215,6 +215,25 @@ def trade_page():
     return render_template('trading.html')
 
 
+@app.post('/place_order')
+def place_order_route():
+    if not session.get('logged_in'):
+        return redirect(url_for('index'))
+    api = get_api()
+    if api:
+        form = request.form
+        api.place_order(
+            security_id=form.get('security_id'),
+            exchange_segment=form.get('exchange_segment'),
+            transaction_type=form.get('transaction_type'),
+            quantity=form.get('quantity'),
+            order_type=form.get('order_type'),
+            product_type=form.get('product_type'),
+            price=form.get('price'),
+        )
+    return redirect(url_for('trade_page'))
+
+
 @app.route('/orders')
 def orders_page():
     if not session.get('logged_in'):
