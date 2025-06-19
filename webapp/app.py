@@ -191,6 +191,25 @@ def trade_page():
     return render_template('trading.html')
 
 
+@app.post('/place_order')
+def place_order_route():
+    if not session.get('logged_in'):
+        return redirect(url_for('index'))
+    api = get_api()
+    if api:
+        form = request.form
+        api.place_order(
+            security_id=form.get('security_id'),
+            exchange_segment=form.get('exchange_segment'),
+            transaction_type=form.get('transaction_type'),
+            quantity=form.get('quantity'),
+            order_type=form.get('order_type'),
+            product_type=form.get('product_type'),
+            price=form.get('price'),
+        )
+    return redirect(url_for('trade_page'))
+
+
 @app.route('/orders')
 def orders_page():
     if not session.get('logged_in'):
@@ -246,24 +265,6 @@ def delete_strategy(strategy_id):
     return redirect(url_for("manage_strategies"))
 
 
-@app.route("/trade")
-def trade_page():
-    if not session.get("logged_in"):
-        return redirect(url_for("index"))
-    return render_template("trading.html")
-
-
-@app.route("/orders")
-def orders_page():
-    if not session.get("logged_in"):
-        return redirect(url_for("index"))
-    api = get_api()
-    orders = []
-    if api:
-        resp = api.get_order_list()
-        if resp.get("status") == "success":
-            orders = resp.get("data", [])
-    return render_template("order_list.html", orders=orders)
     
 if __name__ == "__main__":
     with app.app_context():
