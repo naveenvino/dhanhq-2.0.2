@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}Analytics{% endblock %}
+{% block content %}
+<div class="container">
+  <h2 class="mb-3">Performance Analytics</h2>
+  <canvas id="cumChart"></canvas>
+  <canvas id="ddChart" class="mt-4"></canvas>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+fetch('{{ url_for('analytics_data') }}').then(r=>r.json()).then(data=>{
+  const labels=data.dates;
+  new Chart(document.getElementById('cumChart'),{type:'line',data:{labels:labels,datasets:[{label:'Cumulative P\u0026L',data:data.cumulative}]}});
+  new Chart(document.getElementById('ddChart'),{type:'line',data:{labels:labels,datasets:[{label:'Drawdown',data:data.drawdown}]}});
+});
+</script>
+{% endblock %}

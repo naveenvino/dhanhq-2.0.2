@@ -1,4 +1,5 @@
 import webapp.app as webapp_app
+from datetime import date
 app = webapp_app.app
 
 
@@ -45,3 +46,34 @@ def test_orders_page(monkeypatch):
     html = resp.get_data(as_text=True)
     assert 'table table-bordered table-striped' in html
     assert 'class="container"' in html
+
+
+def test_analytics_data_endpoint():
+    client = app.test_client()
+    _login(client)
+    with app.app_context():
+        webapp_app.db.drop_all()
+        webapp_app.db.create_all()
+        webapp_app.db.session.add(webapp_app.DailyPnL(day=date(2024, 1, 1), pnl=100))
+        webapp_app.db.session.add(webapp_app.DailyPnL(day=date(2024, 1, 2), pnl=-50))
+        webapp_app.db.session.commit()
+    resp = client.get('/analytics/data')
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert 'dates' in data and len(data['dates']) == 2
+    assert 'cumulative' in data and data['cumulative'][1] == 50
+
+
+def test_export_live_csv():
+    client = app.test_client()
+    _login(client)
+    with app.app_context():
+        webapp_app.db.drop_all()
+        webapp_app.db.create_all()
+        tr = webapp_app.TradeResult(pnl=10.0)
+        webapp_app.db.session.add(tr)
+        webapp_app.db.session.commit()
+    resp = client.get('/export/live')
+    assert resp.status_code == 200
+    assert resp.mimetype == 'text/csv'
+

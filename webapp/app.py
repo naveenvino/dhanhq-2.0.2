@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 from datetime import datetime, time, date, timedelta
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, send_file
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -52,8 +52,24 @@ class Strategy(db.Model):
     call_security_id = db.Column(db.String(20))
     put_security_id = db.Column(db.String(20))
 
+    trades = db.relationship('TradeResult', backref='strategy', lazy=True)
+
     def __repr__(self):
         return f'<Strategy {self.name}>'
+
+
+class TradeResult(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    strategy_id = db.Column(db.Integer, db.ForeignKey('strategy.id'))
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    pnl = db.Column(db.Float, default=0.0)
+    reason = db.Column(db.String(50))
+
+
+class DailyPnL(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    day = db.Column(db.Date, unique=True)
+    pnl = db.Column(db.Float, default=0.0)
 
 # --- DhanHQ API Helper ---
 def get_api():
@@ -68,8 +84,8 @@ def get_api():
 def get_opposite_transaction(transaction_type):
     return "BUY" if transaction_type == "SELL" else "SELL"
 
-def square_off_position(api, strategy, reason=""):
-    """Helper function to square off a strategy's open positions."""
+def square_off_position(api, strategy, reason="", pnl=None):
+    """Helper function to square off a strategy's open positions and record results."""
     logging.info(f"Squaring off position for {strategy.name}. Reason: {reason}")
     quantity = 50 * strategy.lots
     
@@ -83,6 +99,31 @@ def square_off_position(api, strategy, reason=""):
     api.place_order(security_id=strategy.put_security_id, exchange_segment=api.FNO,
                     transaction_type=put_exit_transaction, quantity=quantity, order_type=api.MARKET,
                     product_type=strategy.product_type, price=0)
+
+    # Determine pnl if not provided
+    if pnl is None:
+        pos = api.get_positions()
+        if pos.get('status') == 'success' and pos.get('data'):
+            df = pd.DataFrame(pos['data'])
+            call_pos = df[df['securityId'] == strategy.call_security_id]
+            put_pos = df[df['securityId'] == strategy.put_security_id]
+            if not call_pos.empty and not put_pos.empty:
+                pnl = call_pos.iloc[0]['unrealizedProfit'] + put_pos.iloc[0]['unrealizedProfit']
+            else:
+                pnl = 0.0
+        else:
+            pnl = 0.0
+
+    # Record trade result and update daily PnL
+    trade = TradeResult(strategy_id=strategy.id, pnl=pnl, reason=reason)
+    db.session.add(trade)
+    day = date.today()
+    daily = DailyPnL.query.filter_by(day=day).first()
+    if not daily:
+        daily = DailyPnL(day=day, pnl=pnl)
+        db.session.add(daily)
+    else:
+        daily.pnl += pnl
 
     strategy.trade_active = False
     strategy.status = f'stopped ({reason})'
@@ -113,9 +154,9 @@ def execute_strategies():
                         logging.info(f"Strategy: {strategy.name}, Current P&L: ₹{pnl:.2f}")
 
                         if pnl >= strategy.target_profit_amount > 0:
-                            square_off_position(api, strategy, reason="TP Hit")
+                            square_off_position(api, strategy, reason="TP Hit", pnl=pnl)
                         elif pnl <= -abs(strategy.stop_loss_amount):
-                            square_off_position(api, strategy, reason="SL Hit")
+                            square_off_position(api, strategy, reason="SL Hit", pnl=pnl)
         
         # Entry and Time-based Exit Logic
         strategies_to_check = Strategy.query.filter(Strategy.status.in_(['active', 'running'])).all()
@@ -160,7 +201,15 @@ def execute_strategies():
 
             # Time-based Exit
             if strategy.status == 'running' and current_time >= strategy.exit_time:
-                square_off_position(api, strategy, reason="Exit Time")
+                pnl = None
+                positions = api.get_positions()
+                if positions.get('status') == 'success' and positions.get('data'):
+                    df = pd.DataFrame(positions['data'])
+                    call_pos = df[df['securityId'] == strategy.call_security_id]
+                    put_pos = df[df['securityId'] == strategy.put_security_id]
+                    if not call_pos.empty and not put_pos.empty:
+                        pnl = call_pos.iloc[0]['unrealizedProfit'] + put_pos.iloc[0]['unrealizedProfit']
+                square_off_position(api, strategy, reason="Exit Time", pnl=pnl)
 
 # --- Flask Routes ---
 @app.route("/")
@@ -223,6 +272,84 @@ def delete_strategy(strategy_id):
     except Exception as e:
         flash(f"Error deleting strategy: {e}", 'danger')
     return redirect(url_for("manage_strategies"))
+
+
+@app.route('/trade')
+def trade_page():
+    if not session.get("logged_in"): return redirect(url_for("index"))
+    return render_template('trading.html')
+
+
+@app.route('/orders')
+def orders_page():
+    if not session.get("logged_in"): return redirect(url_for("index"))
+    api = get_api()
+    orders = []
+    if api:
+        try:
+            orders = api.get_order_list().get('data', [])
+        except Exception as e:
+            logging.error(f"Error fetching orders: {e}")
+    return render_template('order_list.html', orders=orders)
+
+
+@app.route('/analytics')
+def analytics_page():
+    if not session.get("logged_in"): return redirect(url_for('index'))
+    return render_template('analytics.html')
+
+
+def _calc_drawdown(cum):
+    dd = []
+    max_val = float('-inf')
+    for v in cum:
+        max_val = max(max_val, v)
+        dd.append(v - max_val)
+    return dd
+
+
+@app.route('/analytics/data')
+def analytics_data():
+    if not session.get("logged_in"): return {}
+    daily = DailyPnL.query.order_by(DailyPnL.day).all()
+    dates = [d.day.strftime('%Y-%m-%d') for d in daily]
+    pnl = [d.pnl for d in daily]
+    cumulative = []
+    total = 0
+    for p in pnl:
+        total += p
+        cumulative.append(total)
+    drawdown = _calc_drawdown(cumulative)
+    return {
+        'dates': dates,
+        'pnl': pnl,
+        'cumulative': cumulative,
+        'drawdown': drawdown,
+    }
+
+
+@app.route('/export/<log_type>')
+def export_logs(log_type):
+    if not session.get('logged_in'): return redirect(url_for('index'))
+    if log_type == 'live':
+        data = [
+            {
+                'timestamp': t.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+                'strategy': t.strategy.name if t.strategy else '',
+                'pnl': t.pnl,
+                'reason': t.reason,
+            }
+            for t in TradeResult.query.order_by(TradeResult.timestamp).all()
+        ]
+        df = pd.DataFrame(data)
+        csv = df.to_csv(index=False)
+        return app.response_class(csv, mimetype='text/csv')
+    elif log_type == 'backtest':
+        path = os.path.join(app.root_path, 'backtest_logs.csv')
+        if os.path.exists(path):
+            return send_file(path, mimetype='text/csv', as_attachment=True, download_name='backtest_logs.csv')
+        return app.response_class('', mimetype='text/csv')
+    return '', 404
     
 if __name__ == "__main__":
     with app.app_context():
