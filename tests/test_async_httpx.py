@@ -1,7 +1,7 @@
 import json
 import pytest
 
-from dhanhq.async_httpx import AsyncDhanhq
+from dhanhq.async_httpx import AsyncDhanHQ
 
 
 class DummyResponse:
@@ -33,7 +33,7 @@ class DummySession:
 @pytest.mark.asyncio
 async def test_async_httpx_place_order():
     session = DummySession([{"order_id": "1"}])
-    api = AsyncDhanhq("CID", "TOKEN", session=session)
+    api = AsyncDhanHQ("CID", "TOKEN", session=session)
     resp = await api.place_order(
         security_id="123",
         exchange_segment=api.NSE,
@@ -51,7 +51,7 @@ async def test_async_httpx_place_order():
 @pytest.mark.asyncio
 async def test_async_httpx_get_positions():
     session = DummySession([{"positions": []}])
-    api = AsyncDhanhq("CID", "TOKEN", session=session)
+    api = AsyncDhanHQ("CID", "TOKEN", session=session)
     resp = await api.get_positions()
     assert resp["data"] == {"positions": []}
     assert session.calls[0][0] == "GET"

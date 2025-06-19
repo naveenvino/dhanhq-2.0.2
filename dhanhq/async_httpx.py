@@ -2,7 +2,7 @@ import logging
 import httpx
 from json import dumps as json_dumps
 
-class AsyncDhanhq:
+class AsyncDhanHQ:
     """Asynchronous variant of :class:`dhanhq.dhanhq` using ``httpx.AsyncClient``."""
 
     # Exchange constants
@@ -74,7 +74,7 @@ class AsyncDhanhq:
                 "data": python_response,
             }
         except Exception as e:  # pragma: no cover - defensive
-            logging.warning("Exception in AsyncDhanhq>>_parse_response: %s", e)
+            logging.warning("Exception in AsyncDhanHQ>>_parse_response: %s", e)
             return {"status": "failure", "remarks": str(e), "data": ""}
 
     async def get_order_list(self):
@@ -83,7 +83,7 @@ class AsyncDhanhq:
             resp = await self.session.get(url, headers=self.header)
             return await self._parse_response(resp)
         except Exception as e:  # pragma: no cover - defensive
-            logging.error("Exception in AsyncDhanhq>>get_order_list : %s", e)
+            logging.error("Exception in AsyncDhanHQ>>get_order_list : %s", e)
             return {"status": "failure", "remarks": str(e), "data": ""}
 
     async def get_order_by_id(self, order_id):
@@ -92,7 +92,7 @@ class AsyncDhanhq:
             resp = await self.session.get(url, headers=self.header)
             return await self._parse_response(resp)
         except Exception as e:  # pragma: no cover - defensive
-            logging.error("Exception in AsyncDhanhq>>get_order_by_id : %s", e)
+            logging.error("Exception in AsyncDhanHQ>>get_order_by_id : %s", e)
             return {"status": "failure", "remarks": str(e), "data": ""}
 
     async def place_order(
@@ -141,7 +141,7 @@ class AsyncDhanhq:
             resp = await self.session.post(url, headers=self.header, data=json_dumps(payload))
             return await self._parse_response(resp)
         except Exception as e:  # pragma: no cover - defensive
-            logging.error("Exception in AsyncDhanhq>>place_order: %s", e)
+            logging.error("Exception in AsyncDhanHQ>>place_order: %s", e)
             return {"status": "failure", "remarks": str(e), "data": ""}
 
     async def get_positions(self):
@@ -150,7 +150,7 @@ class AsyncDhanhq:
             resp = await self.session.get(url, headers=self.header)
             return await self._parse_response(resp)
         except Exception as e:  # pragma: no cover - defensive
-            logging.error("Exception in AsyncDhanhq>>get_positions: %s", e)
+            logging.error("Exception in AsyncDhanHQ>>get_positions: %s", e)
             return {"status": "failure", "remarks": str(e), "data": ""}
 
     async def intraday_minute_data(
@@ -177,7 +177,7 @@ class AsyncDhanhq:
             resp = await self.session.post(url, headers=self.header, data=payload)
             return await self._parse_response(resp)
         except Exception as e:  # pragma: no cover - defensive
-            logging.error("Exception in AsyncDhanhq>>intraday_minute_data: %s", e)
+            logging.error("Exception in AsyncDhanHQ>>intraday_minute_data: %s", e)
             return {"status": "failure", "remarks": str(e), "data": ""}
 
     async def historical_daily_data(
@@ -204,7 +204,7 @@ class AsyncDhanhq:
             resp = await self.session.post(url, headers=self.header, data=payload)
             return await self._parse_response(resp)
         except Exception as e:  # pragma: no cover - defensive
-            logging.error("Exception in AsyncDhanhq>>historical_daily_data: %s", e)
+            logging.error("Exception in AsyncDhanHQ>>historical_daily_data: %s", e)
             return {"status": "failure", "remarks": str(e), "data": ""}
 
     async def ticker_data(self, securities):
@@ -220,7 +220,7 @@ class AsyncDhanhq:
             resp = await self.session.post(url, headers=headers, data=payload)
             return await self._parse_response(resp)
         except Exception as e:  # pragma: no cover - defensive
-            logging.error("Exception in AsyncDhanhq>>ticker_data: %s", e)
+            logging.error("Exception in AsyncDhanHQ>>ticker_data: %s", e)
             return {"status": "failure", "remarks": str(e), "data": ""}
 
     async def ohlc_data(self, securities):
@@ -236,7 +236,7 @@ class AsyncDhanhq:
             resp = await self.session.post(url, headers=headers, data=payload)
             return await self._parse_response(resp)
         except Exception as e:  # pragma: no cover - defensive
-            logging.error("Exception in AsyncDhanhq>>ohlc_data: %s", e)
+            logging.error("Exception in AsyncDhanHQ>>ohlc_data: %s", e)
             return {"status": "failure", "remarks": str(e), "data": ""}
 
     async def quote_data(self, securities):
@@ -252,5 +252,5 @@ class AsyncDhanhq:
             resp = await self.session.post(url, headers=headers, data=payload)
             return await self._parse_response(resp)
         except Exception as e:  # pragma: no cover - defensive
-            logging.error("Exception in AsyncDhanhq>>quote_data: %s", e)
+            logging.error("Exception in AsyncDhanHQ>>quote_data: %s", e)
             return {"status": "failure", "remarks": str(e), "data": ""}
