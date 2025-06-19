@@ -3,5 +3,13 @@
 from .dhanhq import dhanhq
 from .async_client import AsyncDhanHQ
 from .async_httpx import AsyncDhanhq
+from .backtesting import BacktestEngine, load_intraday_data, load_daily_data
 
-__all__ = ["dhanhq", "AsyncDhanHQ", "AsyncDhanhq"]
+__all__ = [
+    "dhanhq",
+    "AsyncDhanHQ",
+    "AsyncDhanhq",
+    "BacktestEngine",
+    "load_intraday_data",
+    "load_daily_data",
+]

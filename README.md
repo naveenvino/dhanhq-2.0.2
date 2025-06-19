@@ -350,11 +350,37 @@ Run it with your Dhan credentials:
 ```bash
 export DHAN_CLIENT_ID=your_id
 export DHAN_ACCESS_TOKEN=your_token
+export PAPER_TRADING=1  # optional
 python -m webapp.app
 ```
 
 After starting the app, open `http://localhost:5000` in a modern browser to
 access the Bootstrap-powered interface.
+
+### Backtesting & Paper Trading
+
+The library ships with a lightweight backtesting simulator. Historical candles
+can be fetched using the helper functions:
+
+```python
+from dhanhq import dhanhq, load_intraday_data, BacktestEngine
+
+api = dhanhq("id", "token", paper_trading=True)
+candles = load_intraday_data(api,
+    security_id="1333",
+    exchange_segment=api.NSE,
+    instrument_type="EQUITY",
+    from_date="2024-01-01",
+    to_date="2024-01-05")
+engine = BacktestEngine(candles)
+engine.place_order("1333", "BUY", 1)
+engine.step()
+print(engine.total_pnl())
+```
+
+When `paper_trading=True` the REST client stores orders and positions in memory
+instead of hitting the live API. The Flask webapp automatically respects the
+`PAPER_TRADING=1` environment variable and will operate in paper mode if set.
 
 ## Changelog
 

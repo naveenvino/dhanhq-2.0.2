@@ -62,7 +62,8 @@ def get_api():
     if not client_id or not access_token:
         logging.error("DHAN_CLIENT_ID and DHAN_ACCESS_TOKEN must be set as environment variables.")
         return None
-    return dhanhq(client_id, access_token)
+    paper = os.getenv("PAPER_TRADING") == "1"
+    return dhanhq(client_id, access_token, paper_trading=paper)
 
 # --- Core Trading Logic ---
 def get_opposite_transaction(transaction_type):
@@ -181,6 +182,26 @@ def logout():
     session.pop('logged_in', None)
     flash('You have been logged out.', 'success')
     return redirect(url_for('index'))
+
+
+@app.route('/trade')
+def trade_page():
+    if not session.get('logged_in'):
+        return redirect(url_for('index'))
+    return render_template('trading.html')
+
+
+@app.route('/orders')
+def orders_page():
+    if not session.get('logged_in'):
+        return redirect(url_for('index'))
+    api = get_api()
+    data = []
+    if api:
+        resp = api.get_order_list()
+        if resp.get('status') == 'success':
+            data = resp.get('data', [])
+    return render_template('order_list.html', orders=data)
 
 @app.route("/strategies", methods=["GET", "POST"])
 def manage_strategies():

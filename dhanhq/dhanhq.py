@@ -58,7 +58,7 @@ class dhanhq:
     COMPACT_CSV_URL = "https://images.dhan.co/api-data/api-scrip-master.csv"
     DETAILED_CSV_URL = "https://images.dhan.co/api-data/api-scrip-master-detailed.csv"
 
-    def __init__(self, client_id, access_token, disable_ssl=False, pool=None):
+    def __init__(self, client_id, access_token, disable_ssl=False, pool=None, paper_trading=False):
         """
         Initialize the dhanhq class with client ID and access token.
 
@@ -79,6 +79,9 @@ class dhanhq:
                 "Accept": "application/json",
             }
             self.disable_ssl = disable_ssl
+            self.paper_trading = paper_trading
+            self._paper_orders = []
+            self._paper_positions = {}
             requests.packages.urllib3.util.connection.HAS_IPV6 = False
             self.session = requests.Session()
             if pool:
@@ -133,6 +136,9 @@ class dhanhq:
             dict: The response containing order list status and data.
         """
         try:
+            if self.paper_trading:
+                return {"status": "success", "data": list(self._paper_orders)}
+
             url = self.base_url + "/orders"
             response = self.session.get(url, headers=self.header, timeout=self.timeout)
             return self._parse_response(response)
@@ -155,6 +161,12 @@ class dhanhq:
             dict: The response containing order details and status.
         """
         try:
+            if self.paper_trading:
+                for o in self._paper_orders:
+                    if o["order_id"] == str(order_id):
+                        return {"status": "success", "data": o}
+                return {"status": "failure", "remarks": "order not found", "data": ""}
+
             url = self.base_url + f"/orders/{order_id}"
             response = self.session.get(url, headers=self.header, timeout=self.timeout)
             return self._parse_response(response)
@@ -303,6 +315,31 @@ class dhanhq:
             dict: The response containing the status of the order placement.
         """
         try:
+            if self.paper_trading:
+                qty = int(quantity)
+                price_f = float(price)
+                order_id = str(len(self._paper_orders) + 1)
+                order = {
+                    "order_id": order_id,
+                    "securityId": security_id,
+                    "transactionType": transaction_type,
+                    "quantity": qty,
+                    "price": price_f,
+                }
+                self._paper_orders.append(order)
+                mult = 1 if transaction_type.upper() == "BUY" else -1
+                pos = self._paper_positions.get(security_id)
+                if not pos:
+                    pos = {"securityId": security_id, "quantity": 0, "avgPrice": price_f}
+                    self._paper_positions[security_id] = pos
+                new_qty = pos["quantity"] + mult * qty
+                if new_qty == 0:
+                    pos["avgPrice"] = 0
+                else:
+                    pos["avgPrice"] = ((pos["avgPrice"] * pos["quantity"]) + (price_f * mult * qty)) / new_qty
+                pos["quantity"] = new_qty
+                return {"status": "success", "data": {"order_id": order_id}}
+
             url = self.base_url + "/orders"
             payload = {
                 "dhanClientId": self.client_id,
@@ -439,6 +476,10 @@ class dhanhq:
             dict: The response containing open positions.
         """
         try:
+            if self.paper_trading:
+                data = list(self._paper_positions.values())
+                return {"status": "success", "data": data}
+
             url = self.base_url + f"/positions"
             response = self.session.get(url, headers=self.header, timeout=self.timeout)
             return self._parse_response(response)
