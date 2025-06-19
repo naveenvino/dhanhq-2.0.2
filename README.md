@@ -106,6 +106,9 @@ Available commands are:
 - `get-order ORDER_ID` – fetch details of a specific order
 - `place-order` – create a basic order (see `-h` for required arguments)
 - `positions` – list current positions
+- `backtest DATA.csv` – compute simple profit from a CSV of closing prices
+- `paper-start` / `paper-stop` – manage a paper trading session
+- `upload-strategy FILE.json` – add strategy parameters from a JSON file
 
 
 

@@ -1,6 +1,84 @@
 import argparse
 import json
+import os
+import sqlite3
+from datetime import datetime
+
+import pandas as pd
+
 from .dhanhq import dhanhq
+
+
+def _db_path():
+    return os.getenv(
+        "STRATEGIES_DB",
+        os.path.join(os.path.dirname(__file__), "..", "webapp", "strategies.db"),
+    )
+
+
+def _session_file():
+    return os.getenv(
+        "PAPER_SESSION_FILE",
+        os.path.join(os.path.dirname(__file__), "..", "paper_session.txt"),
+    )
+
+
+def run_backtest(path):
+    """Very simple backtest that calculates profit from OHLC data."""
+    df = pd.read_csv(path)
+    if "close" not in df.columns:
+        raise ValueError("CSV must contain a 'close' column")
+    profit = float(df["close"].iloc[-1] - df["close"].iloc[0])
+    return {"profit": profit}
+
+
+def start_paper():
+    with open(_session_file(), "w") as f:
+        f.write("running")
+    return {"status": "started"}
+
+
+def stop_paper():
+    with open(_session_file(), "w") as f:
+        f.write("stopped")
+    return {"status": "stopped"}
+
+
+def upload_strategy(path):
+    with open(path) as f:
+        data = json.load(f)
+
+    conn = sqlite3.connect(_db_path())
+    cur = conn.cursor()
+    cur.execute(
+        """
+        INSERT INTO strategy (
+            name, product_type, entry_time, exit_time, lots,
+            call_transaction_type, call_strike_offset,
+            put_transaction_type, put_strike_offset,
+            stop_loss_amount, target_profit_amount, status, trade_active
+        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
+        """,
+        (
+            data["name"],
+            data.get("product_type", "INTRADAY"),
+            data["entry_time"],
+            data["exit_time"],
+            int(data.get("lots", 1)),
+            data.get("call_transaction_type", "SELL"),
+            int(data.get("call_strike_offset", 0)),
+            data.get("put_transaction_type", "SELL"),
+            int(data.get("put_strike_offset", 0)),
+            float(data.get("stop_loss_amount", 0.0)),
+            float(data.get("target_profit_amount", 0.0)),
+            "active",
+            False,
+        ),
+    )
+    conn.commit()
+    new_id = cur.lastrowid
+    conn.close()
+    return {"status": "uploaded", "id": new_id}
 
 
 def parse_args():
@@ -25,6 +103,17 @@ def parse_args():
 
     subparsers.add_parser("positions", help="Get open positions")
 
+    backtest = subparsers.add_parser("backtest", help="Run backtest on data file")
+    backtest.add_argument("data_file")
+
+    subparsers.add_parser("paper-start", help="Start paper trading session")
+    subparsers.add_parser("paper-stop", help="Stop paper trading session")
+
+    upload = subparsers.add_parser(
+        "upload-strategy", help="Upload strategy parameters from JSON file"
+    )
+    upload.add_argument("json_file")
+
     return parser.parse_args()
 
 
@@ -48,6 +137,14 @@ def main():
         )
     elif args.command == "positions":
         resp = api.get_positions()
+    elif args.command == "backtest":
+        resp = run_backtest(args.data_file)
+    elif args.command == "paper-start":
+        resp = start_paper()
+    elif args.command == "paper-stop":
+        resp = stop_paper()
+    elif args.command == "upload-strategy":
+        resp = upload_strategy(args.json_file)
     else:
         return
 
